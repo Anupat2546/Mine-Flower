@@ -39,12 +39,15 @@ function loginWithGoogle() {
 }
 
 /* ---------- Facebook ---------- */
-function loginWithFacebook() {
+async function loginWithFacebook() {
   const provider = new firebase.auth.FacebookAuthProvider();
-  mfAuth.signInWithPopup(provider).catch((err) => {
-    console.error(err);
+  try {
+    const result = await mfAuth.signInWithPopup(provider);
+    console.log("Login สำเร็จ", result.user);
+  } catch (err) {
+    console.error("Facebook Login Error:", err);
     showToast("เข้าสู่ระบบด้วย Facebook ไม่สำเร็จ");
-  });
+  }
 }
 
 /* ---------- LINE ----------
