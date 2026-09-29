@@ -1,25 +1,3 @@
-/* ============================================================
-   Cloud Function: lineLogin
-   หน้าที่: รับ "code" ที่ได้จาก LINE Login แล้วแลกเป็น
-   Firebase custom token ส่งกลับไปให้หน้าเว็บ (auth.js เรียกใช้ตัวนี้)
-
-   ทำไมต้องมีไฟล์นี้แยกเป็น Cloud Function (ฝั่งเซิร์ฟเวอร์)?
-   เพราะขั้นตอนนี้ต้องใช้ LINE_CHANNEL_SECRET ซึ่งเป็นความลับ
-   ห้ามเอาไปใส่ในโค้ดหน้าเว็บ (auth.js/script.js) เด็ดขาด เพราะใครก็เปิด
-   ดูโค้ดหน้าเว็บได้ทุกคน จึงต้องซ่อนไว้ในฝั่งเซิร์ฟเวอร์แบบนี้เท่านั้น
-
-   วิธีตั้งค่าและ deploy (รันจากเครื่องที่ลง Node.js + Firebase CLI แล้ว):
-   1) firebase login
-   2) firebase init functions   (เลือกโปรเจกต์ที่สร้างไว้ใน Firebase Console)
-   3) แทนที่ functions/index.js ด้วยไฟล์นี้ และ functions/package.json ด้วยไฟล์ที่แนบมา
-   4) ตั้งค่าความลับ (Node 18+/Functions v2 ใช้ .env แทน functions:config ที่เลิกใช้แล้ว):
-        - สร้างไฟล์ functions/.env ใส่:
-            LINE_CHANNEL_ID=รหัส Channel ID จาก LINE Developers
-            LINE_CHANNEL_SECRET=รหัส Channel Secret จาก LINE Developers
-   5) firebase deploy --only functions
-   6) จะได้ URL ของฟังก์ชันมา เอาไปใส่ใน auth.js ช่อง LINE_LOGIN.TOKEN_EXCHANGE_URL
-   ============================================================ */
-
 const { onRequest } = require("firebase-functions/v2/https");
 const { defineSecret } = require("firebase-functions/params");
 const admin = require("firebase-admin");
@@ -27,7 +5,7 @@ const admin = require("firebase-admin");
 admin.initializeApp();
 
 // กติกาค่าส่ง — ต้องตรงกับ CONFIG.DELIVERY_* ใน inventory-config.js ฝั่งหน้าเว็บ
-const DELIVERY = { ORIGIN: { lat: 13.9545, lng: 100.6285 }, MAX_KM: 20, FREE_KM: 10, FEE: 50 };
+const DELIVERY = { ORIGIN: { lat: 14.082205389556314, lng: 100.62087780564067 }, MAX_KM: 20, FREE_KM: 10, FEE: 50 };
 
 function haversineKm(lat1, lng1, lat2, lng2) {
   const toRad = (d) => (d * Math.PI) / 180;
@@ -36,9 +14,6 @@ function haversineKm(lat1, lng1, lat2, lng2) {
   const a = Math.sin(dLat / 2) ** 2 + Math.cos(toRad(lat1)) * Math.cos(toRad(lat2)) * Math.sin(dLng / 2) ** 2;
   return 6371 * 2 * Math.asin(Math.sqrt(a));
 }
-
-const LINE_CHANNEL_ID = defineSecret("LINE_CHANNEL_ID");
-const LINE_CHANNEL_SECRET = defineSecret("LINE_CHANNEL_SECRET");
 
 // 👉 จาก SlipOK Dashboard > สาขา (Branch) ที่สร้างไว้ > API Key
 const SLIPOK_API_KEY = defineSecret("SLIPOK_API_KEY");
@@ -114,8 +89,11 @@ exports.submitOrder = onRequest(
           items: Array.isArray(s.items) ? s.items.slice(0, 30).map((x) => clip(x, 300)) : [],
           total: Number(s.total) || 0,
           subtotal: Number(s.subtotal) || 0,
+          fulfillmentType: s.fulfillmentType === "pickup" ? "pickup" : "delivery",
           deliveryKm: dKm,
           deliveryFee: expectedFee,
+          deliveryLat: dLat,
+          deliveryLng: dLng,
           recipient: clip(s.recipient, 120),
           deliveryDate: clip(s.deliveryDate, 20),
           deliveryTime: clip(s.deliveryTime, 20),
@@ -143,64 +121,6 @@ exports.submitOrder = onRequest(
   }
 );
 
-exports.lineLogin = onRequest(
-  { secrets: [LINE_CHANNEL_ID, LINE_CHANNEL_SECRET], cors: true },
-  async (req, res) => {
-    if (req.method !== "POST") {
-      return res.status(405).json({ error: "method not allowed" });
-    }
-
-    try {
-      const { code, redirectUri } = req.body || {};
-      if (!code || !redirectUri) {
-        return res.status(400).json({ error: "missing code or redirectUri" });
-      }
-
-      // 1) แลก authorization code เป็น access token กับ LINE
-      const tokenRes = await fetch("https://api.line.me/oauth2/v2.1/token", {
-        method: "POST",
-        headers: { "Content-Type": "application/x-www-form-urlencoded" },
-        body: new URLSearchParams({
-          grant_type: "authorization_code",
-          code: code,
-          redirect_uri: redirectUri,
-          client_id: LINE_CHANNEL_ID.value(),
-          client_secret: LINE_CHANNEL_SECRET.value(),
-        }),
-      });
-      const tokenData = await tokenRes.json();
-      if (!tokenData.access_token) {
-        console.error("LINE token exchange failed:", tokenData);
-        return res.status(400).json({ error: "line token exchange failed" });
-      }
-
-      // 2) ดึงข้อมูลโปรไฟล์ลูกค้าจาก LINE
-      const profileRes = await fetch("https://api.line.me/v2/profile", {
-        headers: { Authorization: "Bearer " + tokenData.access_token },
-      });
-      const profile = await profileRes.json();
-      if (!profile.userId) {
-        console.error("LINE profile fetch failed:", profile);
-        return res.status(400).json({ error: "line profile fetch failed" });
-      }
-
-      // 3) สร้าง Firebase custom token ผูกกับ LINE userId ของลูกค้าคนนี้
-      //    (คนเดิมเข้าอีกครั้งจะได้ uid เดิมเสมอ เพราะ uid มาจาก LINE userId)
-      const uid = "line:" + profile.userId;
-      const customToken = await admin.auth().createCustomToken(uid, {
-        provider: "line",
-        name: profile.displayName || "",
-        picture: profile.pictureUrl || "",
-      });
-
-      res.json({ token: customToken });
-    } catch (err) {
-      console.error(err);
-      res.status(500).json({ error: "internal error" });
-    }
-  }
-);
-
 /* ============================================================
    Cloud Function: verifySlip
    หน้าที่: รับรูปสลิปโอนเงิน (base64) + ยอดเงินที่คาดว่าจะได้รับ
@@ -212,11 +132,11 @@ exports.lineLogin = onRequest(
      - เป็นสลิปซ้ำที่เคยส่งเข้ามาก่อนหน้านี้ไหม (กันลูกค้าเอาสลิปเก่ามาใช้ซ้ำ)
 
    ทำไมต้องมี Cloud Function แยกต่างหาก (ฝั่งเซิร์ฟเวอร์)?
-   เพราะ SlipOK API Key เป็นความลับ ห้ามฝังไว้ในโค้ดหน้าเว็บ (script.js)
-   เด็ดขาด เพราะใครก็เปิดดูโค้ดหน้าเว็บได้ทุกคน จึงต้องซ่อนไว้ในฝั่ง
-   เซิร์ฟเวอร์แบบนี้เท่านั้น (หลักการเดียวกับ lineLogin ด้านบน)
+  เพราะ SlipOK API Key เป็นความลับ ห้ามฝังไว้ในโค้ดหน้าเว็บ (script.js)
+  เด็ดขาด เพราะใครก็เปิดดูโค้ดหน้าเว็บได้ทุกคน จึงต้องซ่อนไว้ในฝั่ง
+  เซิร์ฟเวอร์แบบนี้เท่านั้น
 
-   วิธีตั้งค่าและ deploy เพิ่ม (ต่อจากขั้นตอน lineLogin ด้านบน):
+  วิธีตั้งค่าและ deploy:
    1) สมัครและสร้าง "สาขา" ใน SlipOK Dashboard (https://slipok.com)
       ผูกบัญชีธนาคารร้านไว้กับสาขานั้น จะได้ Branch ID + API Key
    2) ตั้งค่าความลับเพิ่มในไฟล์ functions/.env:

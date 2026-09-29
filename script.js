@@ -602,7 +602,9 @@ function renderCart() {
   document.getElementById("cartSubtotal").textContent = cartSubtotal().toLocaleString() + " บาท";
   const feeEl = document.getElementById("cartDeliveryFee");
   if (typeof deliveryState !== "undefined" && deliveryState.status === "ok") {
-    feeEl.textContent = deliveryState.fee === 0 ? "ฟรี" : deliveryState.fee.toLocaleString() + " บาท";
+    feeEl.textContent = deliveryState.fulfillmentMode === "pickup"
+      ? "รับหน้าร้าน (ฟรี)"
+      : deliveryState.fee === 0 ? "ฟรี" : deliveryState.fee.toLocaleString() + " บาท";
   } else {
     feeEl.textContent = "ยังไม่คำนวณ";
   }
@@ -1034,13 +1036,14 @@ document.getElementById("submitOrder").addEventListener("click", async () => {
   const ordererFirst = f("ordererFirst"), ordererLast = f("ordererLast"), ordererNick = f("ordererNick"), ordererPhone = f("ordererPhone");
   const recipientFirst = f("recipientFirst"), recipientLast = f("recipientLast"), recipientNick = f("recipientNick"), recipientPhone = f("recipientPhone");
   const address = f("custAddress"), date = f("custDate"), time = f("custTime"), note = f("custNote");
+  const isPickup = deliveryState.fulfillmentMode === "pickup";
 
   if (!ordererFirst || !ordererPhone) {
     showToast("กรุณากรอกชื่อและเบอร์โทรผู้สั่งซื้อ");
     return;
   }
-  if (!recipientFirst || !address || !date || !time) {
-    showToast("กรุณากรอกชื่อผู้รับ ที่อยู่ วันที่ และเวลาที่ต้องการรับดอกไม้ให้ครบ");
+  if (!recipientFirst || (!isPickup && !address) || !date || !time) {
+    showToast(`กรุณากรอกชื่อผู้รับ${isPickup ? "" : "และที่อยู่จัดส่ง"} วันที่ และเวลาที่ต้องการรับดอกไม้ให้ครบ`);
     return;
   }
   const [hour, minute] = time.split(":").map(Number);
@@ -1065,7 +1068,9 @@ document.getElementById("submitOrder").addEventListener("click", async () => {
     `🌸 ออเดอร์ใหม่จาก ${CONFIG.SHOP_NAME} 🌸\n\n` +
     `${lines.join("\n")}\n\n` +
     `ค่าดอกไม้: ${cartSubtotal().toLocaleString()} บาท\n` +
-    `ค่าจัดส่ง (${deliveryState.km} กม. จาก${CONFIG.DELIVERY_ORIGIN.name}): ${deliveryFeeNow() === 0 ? "ฟรี" : deliveryFeeNow().toLocaleString() + " บาท"}\n` +
+    (isPickup
+      ? `วิธีรับสินค้า: รับหน้าร้าน (${CONFIG.DELIVERY_ORIGIN.name})\nค่าจัดส่ง: ไม่มี\n`
+      : `วิธีรับสินค้า: จัดส่ง\nค่าจัดส่ง (${deliveryState.km} กม. จาก${CONFIG.DELIVERY_ORIGIN.name}): ${deliveryFeeNow() === 0 ? "ฟรี" : deliveryFeeNow().toLocaleString() + " บาท"}\n`) +
     `ยอดรวม: ${cartTotal().toLocaleString()} บาท\n\n` +
     `— ผู้สั่งซื้อ —\n` +
     `ชื่อ: ${ordererFirst} ${ordererLast} (${ordererNick || "-"})\n` +
@@ -1073,8 +1078,8 @@ document.getElementById("submitOrder").addEventListener("click", async () => {
     `— ผู้รับดอกไม้ —\n` +
     `ชื่อ: ${recipientFirst} ${recipientLast} (${recipientNick || "-"})\n` +
     `เบอร์โทร: ${recipientPhone || "-"}\n` +
-    `ที่อยู่: ${address}\n` +
-    `พิกัดจัดส่ง${deliveryState.approx || deliveryState.estimated ? " (โดยประมาณ)" : ""}: https://www.google.com/maps?q=${deliveryState.lat},${deliveryState.lng}\n` +
+    `ที่อยู่: ${isPickup ? `รับหน้าร้าน ${CONFIG.DELIVERY_ORIGIN.name}` : address}\n` +
+    `พิกัด${isPickup ? "ร้าน" : "จัดส่ง"}${deliveryState.approx || deliveryState.estimated ? " (โดยประมาณ)" : ""}: https://www.google.com/maps?q=${deliveryState.lat},${deliveryState.lng}\n` +
     `วันที่ต้องการรับ: ${date}\n` +
     `เวลาที่ต้องการรับ: ${time} น.\n` +
     (note ? `หมายเหตุ/ข้อความในการ์ด: ${note}\n` : "") +
@@ -1082,6 +1087,7 @@ document.getElementById("submitOrder").addEventListener("click", async () => {
 
   const orderSummary = {
     items: lines,
+    fulfillmentType: isPickup ? "pickup" : "delivery",
     total: cartTotal(),
     subtotal: cartSubtotal(),
     deliveryKm: deliveryState.km,

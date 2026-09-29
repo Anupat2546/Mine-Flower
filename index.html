@@ -75,7 +75,6 @@
       <div class="form-section">
         <p class="drawer__form-title">เลือกช่องทางเข้าสู่ระบบ</p>
         <button type="button" class="btn btn--primary btn--full" id="loginGoogleBtn">เข้าสู่ระบบด้วย Google</button>
-        <button type="button" class="btn btn--primary btn--full nav__login-line" id="loginLineBtn">เข้าสู่ระบบด้วย LINE</button>
         <p class="drawer__hint">เข้าสู่ระบบครั้งแรก ระบบจะสร้างบัญชีให้อัตโนมัติ ไม่ต้องกรอกฟอร์มสมัครแยก</p>
       </div>
     </div>
@@ -108,9 +107,9 @@
     </svg>
   </div>
   <div class="hero__content">
-    <p class="hero__eyebrow">ดอกไม้สด • จัดส่งถึงมือ • ทุกโอกาสพิเศษ</p>
+    <p class="hero__eyebrow">ดอกไม้สด • จัดส่งหรือรับหน้าร้าน • ทุกโอกาสพิเศษ</p>
     <h1 class="hero__title">ช่อดอกไม้ ที่ส่ง<br>ความรู้สึกแทนคุณ</h1>
-    <p class="hero__desc">เลือกช่อที่ใช่ หรือออกแบบช่อของคุณเอง กรอกที่อยู่ แนบสลิป กดยืนยัน — ออเดอร์ของคุณจะถูกบันทึกในประวัติการสั่งซื้อบนเว็บไซต์ทันที</p>
+    <p class="hero__desc">เลือกช่อที่ใช่ หรือออกแบบช่อของคุณเอง เลือกจัดส่งหรือรับหน้าร้าน แนบสลิป กดยืนยัน — ออเดอร์จะถูกบันทึกในประวัติการสั่งซื้อบนเว็บไซต์</p>
     <div class="hero__actions">
       <a href="#catalog" class="btn btn--primary">เลือกช่อดอกไม้</a>
       <a href="#how" class="btn btn--ghost">วิธีสั่งซื้อ</a>
@@ -142,7 +141,7 @@
     <div class="how__card">
       <span class="how__num">2</span>
       <h3>กรอกข้อมูล + แนบสลิป</h3>
-      <p>กรอกข้อมูลผู้สั่ง/ผู้รับ ที่อยู่จัดส่ง แล้วแนบรูปสลิปโอนเงิน</p>
+      <p>กรอกข้อมูลผู้สั่ง/ผู้รับ เลือกรับหน้าร้านหรือจัดส่ง แล้วแนบรูปสลิปโอนเงิน</p>
     </div>
     <div class="how__card">
       <span class="how__num">3</span>
@@ -250,9 +249,15 @@
           <input type="text" id="recipientNick" placeholder="ชื่อเล่น">
           <input type="tel" id="recipientPhone" placeholder="เบอร์โทรผู้รับ">
         </div>
-        <textarea id="custAddress" placeholder="ที่อยู่จัดส่ง" rows="2"></textarea>
+        <div class="fulfillment-options" role="radiogroup" aria-label="วิธีรับดอกไม้">
+          <label><input type="radio" name="fulfillmentMode" value="delivery" checked> จัดส่ง</label>
+          <label><input type="radio" name="fulfillmentMode" value="pickup"> รับหน้าร้าน</label>
+        </div>
+        <div id="deliveryAddressSection">
+          <textarea id="custAddress" placeholder="ที่อยู่จัดส่ง" rows="2"></textarea>
+        </div>
         <div class="delivery-box" id="deliveryBox">
-          <div class="delivery-box__actions">
+          <div class="delivery-box__actions" id="deliveryActions">
             <button type="button" class="btn btn--ghost btn--sm" id="deliveryCalcBtn">📍 คำนวณค่าจัดส่ง</button>
             <button type="button" class="btn btn--ghost btn--sm" id="deliveryGpsBtn">ใช้ตำแหน่งปัจจุบัน</button>
           </div>

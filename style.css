@@ -673,8 +673,12 @@ button{ font-family:inherit; cursor:pointer; border:none; background:none; }
 }
 
 /* ---- ค่าจัดส่ง / ระยะทาง ---- */
+.fulfillment-options{ display:flex; gap:10px; margin:10px 0; }
+.fulfillment-options label{ display:flex; align-items:center; gap:7px; padding:9px 12px; border:1px solid var(--line); border-radius:8px; cursor:pointer; }
+.fulfillment-options input{ accent-color:var(--rose); }
 .delivery-box{ background:var(--cream-2); border-radius:14px; padding:12px 14px; margin:8px 0 12px; }
 .delivery-box__actions{ display:flex; gap:8px; flex-wrap:wrap; }
+.delivery-box__actions[hidden]{ display:none; }
 .delivery-box__info{ font-size:0.85rem; margin:10px 0 4px; line-height:1.6; color:var(--ink); white-space:pre-line; }
 .delivery-box__info--ok{ color:#2f7a4d; }
 .delivery-box__info--bad{ color:var(--rose-deep); font-weight:500; }

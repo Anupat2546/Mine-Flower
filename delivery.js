@@ -12,6 +12,7 @@
 
 const deliveryState = {
   status: "idle", // idle | loading | ok | far | error
+  fulfillmentMode: "delivery",
   km: null,
   fee: 0,
   lat: null,
@@ -35,6 +36,7 @@ function deliveryFeeNow() {
 }
 // คืนข้อความเหตุผลถ้ายังสั่งซื้อไม่ได้ / คืน "" ถ้าผ่าน
 function getDeliveryBlockReason() {
+  if (deliveryState.fulfillmentMode === "pickup") return "";
   if (deliveryState.status === "loading") return "กำลังคำนวณระยะทาง รอสักครู่นะคะ";
   if (deliveryState.status === "far") {
     return `ที่อยู่จัดส่งไกลเกิน ${CONFIG.DELIVERY_MAX_KM} กม. จาก${CONFIG.DELIVERY_ORIGIN.name} ขออภัยยังส่งไม่ได้ค่ะ`;
@@ -109,7 +111,24 @@ function renderDeliveryInfo() {
   if (!el) return;
   const s = deliveryState;
   el.className = "delivery-box__info";
-  if (s.status === "loading") {
+  const rule = document.getElementById("deliveryRule");
+  if (s.fulfillmentMode === "pickup") {
+    rule.textContent = `รับหน้าร้านที่${CONFIG.DELIVERY_ORIGIN.name}`;
+  } else {
+    rule.textContent =
+      `จัดส่งจาก${CONFIG.DELIVERY_ORIGIN.name} ไม่เกิน ${CONFIG.DELIVERY_MAX_KM} กม. • ` +
+      `${CONFIG.DELIVERY_FREE_KM} กม.แรกส่งฟรี • ${CONFIG.DELIVERY_FREE_KM + 1}–${CONFIG.DELIVERY_MAX_KM} กม. ค่าส่ง ${CONFIG.DELIVERY_FEE} บาท`;
+  }
+  if (s.fulfillmentMode === "pickup" && s.status === "ok") {
+    el.classList.add("delivery-box__info--ok");
+    el.replaceChildren(document.createTextNode(`รับหน้าร้านที่${CONFIG.DELIVERY_ORIGIN.name} `));
+    const mapLink = document.createElement("a");
+    mapLink.href = `https://www.google.com/maps/search/?api=1&query=${CONFIG.DELIVERY_ORIGIN.lat},${CONFIG.DELIVERY_ORIGIN.lng}`;
+    mapLink.target = "_blank";
+    mapLink.rel = "noopener noreferrer";
+    mapLink.textContent = "เปิดแผนที่ร้าน";
+    el.append(mapLink);
+  } else if (s.status === "loading") {
     el.textContent = "⏳ กำลังคำนวณระยะทาง...";
   } else if (s.status === "ok") {
     el.classList.add("delivery-box__info--ok");
@@ -135,16 +154,42 @@ function renderDeliveryInfo() {
 function resetDelivery() {
   deliveryRunId += 1; // ยกเลิกงานที่ค้างอยู่
   Object.assign(deliveryState, {
-    status: "idle", km: null, fee: 0, lat: null, lng: null,
+    status: "idle", fulfillmentMode: "delivery", km: null, fee: 0, lat: null, lng: null,
     label: "", source: "", query: "", estimated: false, approx: false, message: "",
   });
   renderDeliveryInfo();
 }
 
+function setFulfillmentMode(mode) {
+  deliveryRunId += 1;
+  const isPickup = mode === "pickup";
+  document.getElementById("deliveryAddressSection").hidden = isPickup;
+  document.getElementById("deliveryActions").hidden = isPickup;
+  if (isPickup) {
+    Object.assign(deliveryState, {
+      status: "ok",
+      fulfillmentMode: "pickup",
+      km: 0,
+      fee: 0,
+      lat: CONFIG.DELIVERY_ORIGIN.lat,
+      lng: CONFIG.DELIVERY_ORIGIN.lng,
+      label: CONFIG.DELIVERY_ORIGIN.name,
+      source: "pickup",
+      query: "",
+      estimated: false,
+      approx: false,
+      message: "",
+    });
+    renderDeliveryInfo();
+  } else {
+    resetDelivery();
+  }
+}
+
 async function runDelivery(getPoint, source, query) {
   const runId = (deliveryRunId += 1);
   const prevFee = deliveryFeeNow();
-  Object.assign(deliveryState, { status: "loading", km: null, fee: 0 });
+  Object.assign(deliveryState, { status: "loading", fulfillmentMode: "delivery", km: null, fee: 0 });
   renderDeliveryInfo();
 
   try {
@@ -196,6 +241,10 @@ async function runDelivery(getPoint, source, query) {
 }
 
 /* ---------- ปุ่มต่างๆ ---------- */
+document.querySelectorAll('input[name="fulfillmentMode"]').forEach((input) => {
+  input.addEventListener("change", () => setFulfillmentMode(input.value));
+});
+
 document.getElementById("deliveryCalcBtn").addEventListener("click", () => {
   const text = document.getElementById("custAddress").value.trim();
   if (!text) {
@@ -238,7 +287,3 @@ document.getElementById("slipDrop").addEventListener("click", (e) => {
 });
 
 renderDeliveryInfo();
-
-document.getElementById("deliveryRule").textContent =
-  `จัดส่งจาก${CONFIG.DELIVERY_ORIGIN.name} ไม่เกิน ${CONFIG.DELIVERY_MAX_KM} กม. • ` +
-  `${CONFIG.DELIVERY_FREE_KM} กม.แรกส่งฟรี • ${CONFIG.DELIVERY_FREE_KM + 1}–${CONFIG.DELIVERY_MAX_KM} กม. ค่าส่ง ${CONFIG.DELIVERY_FEE} บาท`;
