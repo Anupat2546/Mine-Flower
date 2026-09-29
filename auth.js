@@ -38,18 +38,6 @@ function loginWithGoogle() {
   });
 }
 
-/* ---------- Facebook ---------- */
-async function loginWithFacebook() {
-  const provider = new firebase.auth.FacebookAuthProvider();
-  try {
-    const result = await mfAuth.signInWithPopup(provider);
-    console.log("Login สำเร็จ", result.user);
-  } catch (err) {
-    console.error("Facebook Login Error:", err);
-    showToast("เข้าสู่ระบบด้วย Facebook ไม่สำเร็จ");
-  }
-}
-
 /* ---------- LINE ----------
    Firebase ไม่มีตัวเชื่อม LINE ให้ในตัว ต้องพาลูกค้าไปหน้ายืนยันตัวตน
    ของ LINE เอง แล้วให้ Cloud Function (ฝั่งเซิร์ฟเวอร์) แลก "code" ที่ได้
@@ -136,7 +124,6 @@ document.getElementById("loginDrawerBackdrop").addEventListener("click", () => {
   document.getElementById("loginDrawer").classList.remove("open");
 });
 document.getElementById("loginGoogleBtn").addEventListener("click", loginWithGoogle);
-document.getElementById("loginFacebookBtn").addEventListener("click", loginWithFacebook);
 document.getElementById("loginLineBtn").addEventListener("click", loginWithLine);
 document.getElementById("authLogoutBtn").addEventListener("click", logoutUser);
 
