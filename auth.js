@@ -21,22 +21,20 @@ firebase.initializeApp(firebaseConfig);
 const mfAuth = firebase.auth();
 
 /* ---------- Google ---------- */
-function isMobileBrowser() {
-  return /Android|iPhone|iPad|iPod/i.test(navigator.userAgent) ||
-    (navigator.platform === "MacIntel" && navigator.maxTouchPoints > 1);
-}
-
 async function loginWithGoogle() {
   const provider = new firebase.auth.GoogleAuthProvider();
   try {
-    if (isMobileBrowser()) {
-      await mfAuth.signInWithRedirect(provider);
-      return;
-    }
     await mfAuth.signInWithPopup(provider);
   } catch (err) {
     console.error(err);
-    if (typeof showToast === "function") showToast("เข้าสู่ระบบด้วย Google ไม่สำเร็จ");
+    if (typeof showToast === "function") {
+      const message = ["auth/popup-blocked", "auth/operation-not-supported-in-this-environment"].includes(err.code)
+        ? "เบราว์เซอร์บล็อกหน้าต่างเข้าสู่ระบบ กรุณาเปิดเว็บใน Safari หรือ Chrome แล้วลองอีกครั้ง"
+        : err.code === "auth/popup-closed-by-user"
+          ? "ปิดหน้าต่างเข้าสู่ระบบก่อนเสร็จ กรุณาลองใหม่"
+          : "เข้าสู่ระบบด้วย Google ไม่สำเร็จ กรุณาลองใหม่อีกครั้ง";
+      showToast(message);
+    }
   }
 }
 
@@ -65,10 +63,6 @@ function updateAuthUI(user) {
 }
 
 mfAuth.onAuthStateChanged(updateAuthUI);
-mfAuth.getRedirectResult().catch((err) => {
-  console.error("Google redirect login error:", err);
-  if (typeof showToast === "function") showToast("เข้าสู่ระบบด้วย Google ไม่สำเร็จ");
-});
 
 document.getElementById("authLoginBtn").addEventListener("click", () => {
   document.getElementById("loginDrawer").classList.add("open");
