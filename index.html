@@ -1,0 +1,311 @@
+<!DOCTYPE html>
+<html lang="th">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+<title>Mine Flowers | ร้านดอกไม้ออนไลน์</title>
+<meta name="description" content="Mine Flowers ร้านดอกไม้ออนไลน์ สั่งช่อดอกไม้สดหรือออกแบบช่อเอง จัดส่งถึงมือทุกโอกาสพิเศษ">
+
+<!-- ตั้งค่า URL จริงของเว็บที่นี่หลังซื้อโดเมนและอัปโหลดขึ้นโฮสติ้งแล้ว
+     (ดูวิธีทำให้ mineflower.com ใช้งานได้จริงในไฟล์ README.md หัวข้อ "โดเมนเว็บไซต์") -->
+<link rel="canonical" href="https://www.mineflower.com/">
+<meta property="og:url" content="https://www.mineflower.com/">
+<meta property="og:title" content="Mine Flowers | ร้านดอกไม้ออนไลน์">
+<meta property="og:description" content="สั่งช่อดอกไม้สดหรือออกแบบช่อเอง จัดส่งถึงมือทุกโอกาสพิเศษ">
+<meta property="og:type" content="website">
+
+<!-- ทำให้เพิ่มเว็บลงหน้าจอโฮมของมือถือได้ดูเหมือนแอป ทั้ง iOS และ Android -->
+<meta name="theme-color" content="#C15C77">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="apple-mobile-web-app-title" content="Mine Flowers">
+<link rel="manifest" href="manifest.json">
+<!-- ไอคอนตอนเพิ่มลงหน้าจอโฮม (ไอคอน 180x180px) — เอารูปโลโก้ร้านไปวางที่
+     images/icon-180.png แล้วลบคอมเมนต์บรรทัดนี้ออก
+<link rel="apple-touch-icon" href="images/icon-180.png"> -->
+
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Mitr:wght@300;400;500;600&family=Prompt:wght@300;400;500;600&family=Dancing+Script:wght@600;700&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="style.css">
+</head>
+<body>
+
+<!-- ===== NAVBAR ===== -->
+<header class="nav">
+  <div class="nav__inner">
+    <a href="#top" class="nav__logo">Mine <span>Flowers</span></a>
+    <nav class="nav__links">
+      <a href="#catalog">ช่อดอกไม้</a>
+      <a href="#how">วิธีสั่งซื้อ</a>
+      <a href="#orderHistory">ประวัติออเดอร์</a>
+      <a href="#contact">ติดต่อร้าน</a>
+    </nav>
+    <button class="nav__burger" id="navBurger" aria-label="เมนู" aria-expanded="false">
+      <span></span><span></span><span></span>
+    </button>
+    <button class="nav__login" id="authLoginBtn" aria-label="เข้าสู่ระบบ" title="เข้าสู่ระบบ">
+      <span class="nav__btn-text">เข้าสู่ระบบ</span>
+      <svg class="nav__btn-icon" width="20" height="20" viewBox="0 0 24 24" fill="none" aria-hidden="true"><circle cx="12" cy="8" r="4" stroke="currentColor" stroke-width="1.7"/><path d="M4 20c0-3.6 3.6-6 8-6s8 2.4 8 6" stroke="currentColor" stroke-width="1.7" stroke-linecap="round"/></svg>
+    </button>
+    <div class="nav__user-chip" id="authUserChip" style="display:none;">
+      <span class="nav__user-name" id="authUserName"></span>
+      <button class="nav__logout" id="authLogoutBtn" aria-label="ออกจากระบบ" title="ออกจากระบบ">
+        <span class="nav__btn-text">ออกจากระบบ</span>
+        <svg class="nav__btn-icon" width="20" height="20" viewBox="0 0 24 24" fill="none" aria-hidden="true"><path d="M9 4H5a1 1 0 0 0-1 1v14a1 1 0 0 0 1 1h4" stroke="currentColor" stroke-width="1.7" stroke-linecap="round"/><path d="M16 8l4 4-4 4M20 12H9" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"/></svg>
+      </button>
+    </div>
+    <button class="nav__cart" id="cartToggle" aria-label="ตะกร้าสินค้า">
+      <svg width="22" height="22" viewBox="0 0 24 24" fill="none"><path d="M3 4h2l2.4 12.2a2 2 0 0 0 2 1.6h7.4a2 2 0 0 0 2-1.6L21 8H6" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"/><circle cx="10" cy="21" r="1.4" fill="currentColor"/><circle cx="18" cy="21" r="1.4" fill="currentColor"/></svg>
+      <span class="nav__cart-count" id="cartCount">0</span>
+    </button>
+  </div>
+</header>
+
+<!-- ===== LOGIN / SIGNUP DRAWER ===== -->
+<div class="drawer" id="loginDrawer">
+  <div class="drawer__backdrop" id="loginDrawerBackdrop"></div>
+  <div class="drawer__panel">
+    <div class="drawer__head">
+      <h3>เข้าสู่ระบบ / สมัครสมาชิก</h3>
+      <button id="loginDrawerClose" aria-label="ปิด">✕</button>
+    </div>
+    <div class="drawer__form">
+      <div class="form-section">
+        <p class="drawer__form-title">เลือกช่องทางเข้าสู่ระบบ</p>
+        <button type="button" class="btn btn--primary btn--full" id="loginGoogleBtn">เข้าสู่ระบบด้วย Google</button>
+        <button type="button" class="btn btn--primary btn--full nav__login-fb" id="loginFacebookBtn">เข้าสู่ระบบด้วย Facebook</button>
+        <button type="button" class="btn btn--primary btn--full nav__login-line" id="loginLineBtn">เข้าสู่ระบบด้วย LINE</button>
+        <p class="drawer__hint">เข้าสู่ระบบครั้งแรก ระบบจะสร้างบัญชีให้อัตโนมัติ ไม่ต้องกรอกฟอร์มสมัครแยก</p>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ===== MOBILE NAV MENU (แสดงเมื่อกดปุ่มแฮมเบอร์เกอร์บนจอเล็ก) ===== -->
+<div class="nav-mobile__backdrop" id="navMobileBackdrop"></div>
+<nav class="nav-mobile" id="navMobile">
+  <button type="button" class="nav-mobile__close" id="navMobileClose" aria-label="ปิดเมนู">&times;</button>
+  <a href="#catalog">ช่อดอกไม้</a>
+  <a href="#how">วิธีสั่งซื้อ</a>
+  <a href="#contact">ติดต่อร้าน</a>
+  <a href="#orderHistory">ประวัติออเดอร์</a>
+</nav>
+
+<!-- ===== HERO ===== -->
+<section class="hero" id="top">
+  <div class="hero__bloom" id="heroMedia" aria-hidden="true">
+    <svg viewBox="0 0 600 600" width="100%" height="100%">
+      <g class="bloom-petals">
+        <ellipse cx="300" cy="180" rx="70" ry="110" fill="var(--rose)" opacity="0.9"/>
+        <ellipse cx="300" cy="180" rx="70" ry="110" fill="var(--rose-deep)" opacity="0.55" transform="rotate(60 300 300)"/>
+        <ellipse cx="300" cy="180" rx="70" ry="110" fill="var(--rose)" opacity="0.75" transform="rotate(120 300 300)"/>
+        <ellipse cx="300" cy="180" rx="70" ry="110" fill="var(--rose-deep)" opacity="0.5" transform="rotate(180 300 300)"/>
+        <ellipse cx="300" cy="180" rx="70" ry="110" fill="var(--rose)" opacity="0.8" transform="rotate(240 300 300)"/>
+        <ellipse cx="300" cy="180" rx="70" ry="110" fill="var(--rose-deep)" opacity="0.6" transform="rotate(300 300 300)"/>
+        <circle cx="300" cy="300" r="46" fill="var(--gold)"/>
+      </g>
+    </svg>
+  </div>
+  <div class="hero__content">
+    <p class="hero__eyebrow">ดอกไม้สด • จัดส่งถึงมือ • ทุกโอกาสพิเศษ</p>
+    <h1 class="hero__title">ช่อดอกไม้ ที่ส่ง<br>ความรู้สึกแทนคุณ</h1>
+    <p class="hero__desc">เลือกช่อที่ใช่ หรือออกแบบช่อของคุณเอง กรอกที่อยู่ แนบสลิป กดยืนยัน — ออเดอร์ของคุณจะถูกบันทึกในประวัติการสั่งซื้อบนเว็บไซต์ทันที</p>
+    <div class="hero__actions">
+      <a href="#catalog" class="btn btn--primary">เลือกช่อดอกไม้</a>
+      <a href="#how" class="btn btn--ghost">วิธีสั่งซื้อ</a>
+    </div>
+  </div>
+</section>
+
+<!-- ===== CATALOG ===== -->
+<section class="catalog" id="catalog">
+  <div class="section__head">
+    <p class="section__eyebrow">01 — เลือกช่อของคุณ</p>
+    <h2>ดอกไม้ทุกช่อ จัดสดใหม่รายวัน</h2>
+  </div>
+  <div class="catalog__grid" id="productGrid"></div>
+</section>
+
+<!-- ===== HOW IT WORKS ===== -->
+<section class="how" id="how">
+  <div class="section__head">
+    <p class="section__eyebrow">02 — ขั้นตอนสั่งซื้อ</p>
+    <h2>ง่ายแค่ 3 ขั้นตอน</h2>
+  </div>
+  <div class="how__grid">
+    <div class="how__card">
+      <span class="how__num">1</span>
+      <h3>เลือกช่อ หรือออกแบบเอง</h3>
+      <p>เลือกช่อสำเร็จรูป หรือกด "ออกแบบช่อของคุณเอง" เพื่อเลือกชนิดดอก สี กระดาษห่อ และโบว์เอง</p>
+    </div>
+    <div class="how__card">
+      <span class="how__num">2</span>
+      <h3>กรอกข้อมูล + แนบสลิป</h3>
+      <p>กรอกข้อมูลผู้สั่ง/ผู้รับ ที่อยู่จัดส่ง แล้วแนบรูปสลิปโอนเงิน</p>
+    </div>
+    <div class="how__card">
+      <span class="how__num">3</span>
+      <h3>ยืนยัน → บันทึกประวัติการสั่งซื้อ</h3>
+      <p>ระบบบันทึกออเดอร์ให้อัตโนมัติ ตรวจสอบสถานะได้ที่ประวัติการสั่งซื้อบนเว็บไซต์</p>
+    </div>
+  </div>
+</section>
+
+<!-- ===== ORDER HISTORY ===== -->
+<section class="order-history" id="orderHistory">
+  <div class="section__head">
+    <p class="section__eyebrow">03 — ประวัติการสั่งซื้อ</p>
+    <div class="section__title-row">
+      <h2>รายการสั่งซื้อของคุณ</h2>
+      <button type="button" class="order-history__clear" id="clearOrderHistory">ล้างประวัติ</button>
+    </div>
+  </div>
+  <div class="order-history__list" id="orderHistoryList"></div>
+</section>
+
+<!-- ===== GALLERY ===== -->
+<section class="gallery" id="gallery" style="display:none;">
+  <div class="section__head">
+    <p class="section__eyebrow">03 — บรรยากาศร้าน</p>
+    <h2>รูปหน้าร้าน &amp; ผลงานที่ผ่านมา</h2>
+  </div>
+  <div class="gallery__grid" id="galleryGrid"></div>
+</section>
+
+<!-- ===== FOOTER / CONTACT ===== -->
+<footer class="footer" id="contact">
+  <div class="footer__inner">
+    <div class="footer__brand">
+      <a href="#top" class="nav__logo footer__logo">Mine <span>Flowers</span></a>
+      <p>ร้านดอกไม้ออนไลน์ จัดส่งดอกไม้สดทุกโอกาส</p>
+    </div>
+    <div class="footer__social">
+      <p class="footer__label">ติดตามร้านได้ที่</p>
+      <div class="footer__icons">
+        <a href="https://www.instagram.com/mine_flowerz" target="_blank" rel="noopener" aria-label="Instagram">IG</a>
+        <a href="https://www.facebook.com/MineFlowerZ" target="_blank" rel="noopener" aria-label="Facebook">FB</a>
+        <a href="https://www.tiktok.com/@mine.flower5" target="_blank" rel="noopener" aria-label="TikTok">TT</a>
+      </div>
+    </div>
+  </div>
+  <p class="footer__copy">© 2026 Mine Flowers — ทำด้วยใจ ส่งด้วยดอกไม้สด · <a href="admin.html">สำหรับเจ้าของร้าน</a></p>
+</footer>
+
+<!-- ===== CUSTOM BOUQUET BUILDER MODAL ===== -->
+<div class="drawer" id="builder">
+  <div class="drawer__backdrop" id="builderBackdrop"></div>
+  <div class="drawer__panel">
+    <div class="drawer__head">
+      <h3>ออกแบบช่อของคุณเอง</h3>
+      <button id="builderClose" aria-label="ปิด">✕</button>
+    </div>
+    <div class="drawer__form" id="builderBody">
+      <!-- ตัวเลือกดอกไม้/สี/ห่อ/โบว์ ถูกสร้างโดย script.js ตามสต็อกที่เจ้าของร้านตั้งไว้ -->
+    </div>
+    <div class="drawer__footer">
+      <div class="drawer__total">
+        <span>ราคาช่อนี้</span>
+        <strong id="builderTotal">0 บาท</strong>
+      </div>
+      <button class="btn btn--primary btn--full" id="builderAdd">เพิ่มลงตะกร้า</button>
+      <p class="drawer__hint" id="builderHint"></p>
+    </div>
+  </div>
+</div>
+
+<!-- ===== CART DRAWER ===== -->
+<div class="drawer" id="drawer">
+  <div class="drawer__backdrop" id="drawerBackdrop"></div>
+  <div class="drawer__panel">
+    <div class="drawer__head">
+      <h3>ตะกร้าของคุณ</h3>
+      <button id="drawerClose" aria-label="ปิด">✕</button>
+    </div>
+
+    <div class="drawer__body" id="drawerItems">
+      <!-- cart items injected here -->
+    </div>
+
+    <div class="drawer__form" id="orderForm">
+      <div class="form-section">
+        <p class="drawer__form-title">ข้อมูลผู้สั่งซื้อ</p>
+        <div class="form__row">
+          <input type="text" id="ordererFirst" placeholder="ชื่อจริง">
+          <input type="text" id="ordererLast" placeholder="นามสกุล">
+        </div>
+        <div class="form__row">
+          <input type="text" id="ordererNick" placeholder="ชื่อเล่น">
+          <input type="tel" id="ordererPhone" placeholder="เบอร์โทรผู้สั่ง">
+        </div>
+      </div>
+
+      <div class="form-section">
+        <p class="drawer__form-title">ข้อมูลผู้รับดอกไม้</p>
+        <div class="form__row">
+          <input type="text" id="recipientFirst" placeholder="ชื่อจริง">
+          <input type="text" id="recipientLast" placeholder="นามสกุล">
+        </div>
+        <div class="form__row">
+          <input type="text" id="recipientNick" placeholder="ชื่อเล่น">
+          <input type="tel" id="recipientPhone" placeholder="เบอร์โทรผู้รับ">
+        </div>
+        <textarea id="custAddress" placeholder="ที่อยู่จัดส่ง" rows="2"></textarea>
+        <div class="delivery-box" id="deliveryBox">
+          <div class="delivery-box__actions">
+            <button type="button" class="btn btn--ghost btn--sm" id="deliveryCalcBtn">📍 คำนวณค่าจัดส่ง</button>
+            <button type="button" class="btn btn--ghost btn--sm" id="deliveryGpsBtn">ใช้ตำแหน่งปัจจุบัน</button>
+          </div>
+          <p class="delivery-box__info" id="deliveryInfo" aria-live="polite"></p>
+          <p class="delivery-box__rule" id="deliveryRule"></p>
+        </div>
+        <div class="form__row">
+          <input type="date" id="custDate">
+          <input type="time" id="custTime" min="10:00" max="20:30" step="1800">
+        </div>
+        <textarea id="custNote" placeholder="ข้อความในการ์ด / หมายเหตุ (ถ้ามี)" rows="2"></textarea>
+      </div>
+
+      <div class="form-section">
+        <p class="drawer__form-title">ข้อมูลการชำระเงิน</p>
+        <div class="payment-info" id="paymentInfo">
+          <!-- ข้อมูลบัญชีธนาคาร/QR พร้อมเพย์ ถูกสร้างโดย script.js จาก CONFIG ใน inventory-config.js -->
+        </div>
+      </div>
+
+      <div class="form-section">
+        <p class="drawer__form-title">แนบสลิปโอนเงิน</p>
+        <label class="slip__drop" id="slipDrop">
+          <input type="file" id="slipInput" accept="image/*" multiple hidden>
+          <span id="slipDropText">แตะเพื่อเลือกรูปสลิป (แนบได้หลายรูป)</span>
+        </label>
+        <div class="slip__preview" id="slipPreview" style="display:none;"></div>
+      </div>
+    </div>
+
+    <div class="drawer__footer">
+      <div class="drawer__breakdown">
+        <div><span>ค่าดอกไม้</span><span id="cartSubtotal">0 บาท</span></div>
+        <div><span>ค่าจัดส่ง</span><span id="cartDeliveryFee">ยังไม่คำนวณ</span></div>
+      </div>
+      <div class="drawer__total">
+        <span>ยอดรวม</span>
+        <strong id="cartTotal">0 บาท</strong>
+      </div>
+      <button class="btn btn--primary btn--full" id="submitOrder">ยืนยันสั่งซื้อ</button>
+      <p class="drawer__hint">เมื่อกดยืนยัน ออเดอร์จะถูกบันทึกไว้ที่ "ประวัติการสั่งซื้อ" บนเว็บไซต์ (ไม่มีการเปิดแอป LINE) — ล็อกอินบัญชีเดียวกันเพื่อดูประวัติได้ทั้งบน PC, MacBook และมือถือ</p>
+    </div>
+  </div>
+</div>
+
+<div class="toast" id="toast"></div>
+
+<script src="https://www.gstatic.com/firebasejs/12.18.0/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/12.18.0/firebase-auth-compat.js"></script>
+<script src="auth.js"></script>
+<script src="inventory-config.js"></script>
+<script src="delivery.js"></script>
+<script src="script.js"></script>
+</body>
+</html>

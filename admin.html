@@ -1,0 +1,117 @@
+<!DOCTYPE html>
+<html lang="th">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+<meta name="theme-color" content="#C15C77">
+<title>ตั้งค่าร้าน | Mine Flowers Admin</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Mitr:wght@400;500;600&family=Prompt:wght@300;400;500;600&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="style.css">
+<link rel="stylesheet" href="admin.css">
+<!-- Firebase (สำหรับหน้าออเดอร์ลูกค้าแบบเรียลไทม์ด้านล่าง) -->
+<script src="https://www.gstatic.com/firebasejs/10.14.1/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.14.1/firebase-auth-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.14.1/firebase-firestore-compat.js"></script>
+</head>
+<body class="admin-body">
+
+<!-- ===== LOGIN GATE ===== -->
+<div class="admin-login" id="loginGate">
+  <div class="admin-login__box">
+    <h1 class="nav__logo">Mine <span>Flowers</span></h1>
+    <p class="admin-login__sub">หน้าตั้งค่าสำหรับเจ้าของร้าน</p>
+    <input type="password" id="passwordInput" placeholder="รหัสผ่านเจ้าของร้าน">
+    <button class="btn btn--primary btn--full" id="loginBtn">เข้าสู่ระบบ</button>
+    <p class="admin-login__hint">รหัสผ่านตั้งไว้ในไฟล์ inventory-config.js (CONFIG.ADMIN_PASSWORD)</p>
+    <a href="index.html" class="admin-login__back">← กลับไปหน้าร้าน</a>
+  </div>
+</div>
+
+<!-- ===== ADMIN PANEL ===== -->
+<div class="admin-panel" id="adminPanel" style="display:none;">
+  <header class="admin-header">
+    <a href="index.html" class="nav__logo">Mine <span>Flowers</span></a>
+    <div class="admin-header__actions">
+      <span class="admin-header__title">จัดการสต็อกร้าน</span>
+      <button class="btn btn--ghost btn--sm" id="logoutBtn">ออกจากระบบ</button>
+    </div>
+  </header>
+
+  <main class="admin-main">
+    <!-- ===== ออเดอร์ลูกค้าแบบเรียลไทม์ (ทุกอุปกรณ์) ===== -->
+    <section class="admin-section admin-section--orders">
+      <h2>ออเดอร์ลูกค้า (เรียลไทม์)</h2>
+      <p class="admin-section__hint">
+        ดูรายละเอียดออเดอร์และรูปสลิปที่ลูกค้าส่งเข้ามาได้โดยตรง ไม่ต้องเปิด LINE
+        — อัปเดตจากทุกอุปกรณ์ที่ลูกค้าสั่งซื้อ (PC / มือถือ / iOS / Android)
+      </p>
+
+      <div class="orders-gate" id="ordersGate">
+        <button class="btn btn--primary btn--sm" id="ordersLoginBtn" type="button">เข้าสู่ระบบด้วย Google เพื่อดูออเดอร์</button>
+        <p class="admin-section__hint">
+          จำกัดสิทธิ์เฉพาะอีเมลที่ตั้งไว้ใน <code>ADMIN_EMAILS</code>
+          (ไฟล์ <code>admin-orders.js</code>) เท่านั้นที่เข้าดูได้
+        </p>
+      </div>
+
+      <div id="ordersPanel" style="display:none;">
+        <div class="orders-who">
+          <span id="ordersWho"></span>
+          <button class="btn btn--ghost btn--sm" id="ordersLogoutBtn" type="button" style="display:none;">ออกจากระบบ (Google)</button>
+        </div>
+        <div class="orders-list" id="ordersList"></div>
+      </div>
+    </section>
+
+    <p class="admin-note">
+      ✏️ ปิดสวิตช์ = ซ่อนตัวเลือกนี้จากลูกค้าทันที &nbsp;•&nbsp;
+      ใส่จำนวนคงเหลือ = 0 ระบบจะขึ้น "หมด" ให้ลูกค้าเห็นแต่ยังเลือกไม่ได้ &nbsp;•&nbsp;
+      กด "บันทึกการเปลี่ยนแปลง" ทุกครั้งหลังแก้ไข
+    </p>
+
+    <section class="admin-section admin-section--orders">
+      <h2>ประวัติออเดอร์ในเครื่องนี้</h2>
+      <p class="admin-section__hint">ลบประวัติออเดอร์ที่บันทึกไว้ในเบราว์เซอร์เครื่องเจ้าของร้านเท่านั้น</p>
+      <button class="btn btn--ghost btn--sm" id="clearOrderHistoryBtn" type="button">ล้างประวัติออเดอร์ทั้งหมด</button>
+    </section>
+
+    <section class="admin-section" data-key="flowerTypes">
+      <h2>ชนิดดอกไม้</h2>
+      <div class="admin-table" id="table-flowerTypes"></div>
+      <button class="btn btn--ghost btn--sm admin-add" data-add-to="flowerTypes">+ เพิ่มชนิดดอกไม้</button>
+    </section>
+
+    <section class="admin-section" data-key="flowerColors">
+      <h2>สีดอกไม้</h2>
+      <div class="admin-table" id="table-flowerColors"></div>
+      <button class="btn btn--ghost btn--sm admin-add" data-add-to="flowerColors">+ เพิ่มสีดอกไม้</button>
+    </section>
+
+    <section class="admin-section" data-key="wraps">
+      <h2>กระดาษ/ห่อช่อ</h2>
+      <div class="admin-table" id="table-wraps"></div>
+      <button class="btn btn--ghost btn--sm admin-add" data-add-to="wraps">+ เพิ่มแบบห่อช่อ</button>
+    </section>
+
+    <section class="admin-section" data-key="bows">
+      <h2>โบว์/ริบบิ้น</h2>
+      <div class="admin-table" id="table-bows"></div>
+      <button class="btn btn--ghost btn--sm admin-add" data-add-to="bows">+ เพิ่มโบว์</button>
+    </section>
+  </main>
+
+  <div class="admin-savebar">
+    <button class="btn btn--ghost btn--sm" id="resetBtn">รีเซ็ตเป็นค่าเริ่มต้น</button>
+    <button class="btn btn--primary" id="saveBtn">บันทึกการเปลี่ยนแปลง</button>
+  </div>
+</div>
+
+<div class="toast" id="toast"></div>
+
+<script src="inventory-config.js"></script>
+<script src="admin.js"></script>
+<script src="admin-orders.js"></script>
+</body>
+</html>
