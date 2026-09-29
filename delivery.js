@@ -78,6 +78,60 @@ async function fetchDrivingKm(lat, lng) {
 /* ---------- ที่อยู่ → พิกัด ---------- */
 const deliverySleep = (ms) => new Promise((r) => setTimeout(r, ms));
 
+function parseCoordinatePair(value) {
+  const match = String(value).match(/(-?\d{1,2}(?:\.\d+)?)\s*[,~]\s*(-?\d{1,3}(?:\.\d+)?)/);
+  if (!match) return null;
+  const lat = Number(match[1]);
+  const lng = Number(match[2]);
+  if (Math.abs(lat) > 90 || Math.abs(lng) > 180) return null;
+  return { lat, lng };
+}
+
+function parseMapLocation(text) {
+  const raw = text.trim();
+  const urls = raw.match(/https?:\/\/[^\s<>"']+/gi) || [];
+  const candidates = [];
+
+  for (const rawUrl of urls) {
+    const link = rawUrl.replace(/[),.;\]}]+$/, "");
+    let url;
+    try {
+      url = new URL(link);
+    } catch (e) {
+      continue;
+    }
+
+    const markerCoordinates =
+      link.match(/@(-?\d+(?:\.\d+)?),\s*(-?\d+(?:\.\d+)?)/) ||
+      link.match(/!3d(-?\d+(?:\.\d+)?)!4d(-?\d+(?:\.\d+)?)/);
+    if (markerCoordinates) {
+      const point = parseCoordinatePair(`${markerCoordinates[1]},${markerCoordinates[2]}`);
+      if (point) return { point, query: candidates[0] || "", label: candidates[0] || "พิกัดจากลิงก์แผนที่" };
+    }
+
+    for (const key of ["ll", "center", "cp", "destination", "daddr", "to", "query", "q", "address", "where", "where1"]) {
+      const value = url.searchParams.get(key);
+      if (!value) continue;
+      const point = parseCoordinatePair(value);
+      if (point) return { point, query: candidates[0] || "", label: candidates[0] || "พิกัดจากลิงก์แผนที่" };
+      if (["query", "q", "address", "destination", "daddr", "where", "where1", "to"].includes(key)) {
+        candidates.push(value.trim());
+      }
+    }
+
+    const path = decodeURIComponent(url.pathname).replace(/\+/g, " ");
+    const placeMatch = path.match(/\/maps\/(?:place|search)\/([^/]+)/i);
+    if (placeMatch) candidates.push(placeMatch[1].replace(/,/g, " ").trim());
+  }
+
+  const plainPoint = parseCoordinatePair(raw);
+  if (plainPoint) return { point: plainPoint, query: "", label: "พิกัดที่ระบุ" };
+
+  const sharedText = raw.replace(/https?:\/\/[^\s<>"']+/gi, "").trim();
+  const query = candidates.find(Boolean) || sharedText || "";
+  return { point: null, query };
+}
+
 async function nominatimSearch(q) {
   const params = new URLSearchParams({
     q,
@@ -92,11 +146,34 @@ async function nominatimSearch(q) {
   return arr.length ? { lat: Number(arr[0].lat), lng: Number(arr[0].lon), label: arr[0].display_name } : null;
 }
 
+async function reverseGeocode(point) {
+  const params = new URLSearchParams({
+    lat: String(point.lat),
+    lon: String(point.lng),
+    format: "jsonv2",
+    "accept-language": "th",
+  });
+  try {
+    const res = await fetch("https://nominatim.openstreetmap.org/reverse?" + params.toString());
+    if (!res.ok) return "";
+    const data = await res.json();
+    return data.display_name || "";
+  } catch (e) {
+    return "";
+  }
+}
+
 async function geocodeAddress(text) {
-  const full = await nominatimSearch(text);
+  const parsed = parseMapLocation(text);
+  if (parsed.point) {
+    return { ...parsed.point, label: (await reverseGeocode(parsed.point)) || parsed.label };
+  }
+  if (!parsed.query) return null;
+
+  const full = await nominatimSearch(parsed.query);
   if (full) return { ...full, approx: false };
   // ที่อยู่ละเอียดเกินไปจนหาไม่เจอ → ลองใช้ 3 คำท้าย (ตำบล/อำเภอ/จังหวัด) แต่ถือเป็นค่าประมาณ
-  const tokens = text.split(/[\s,]+/).filter(Boolean);
+  const tokens = parsed.query.split(/[\s,]+/).filter(Boolean);
   if (tokens.length > 3) {
     await deliverySleep(1100); // Nominatim จำกัด 1 request/วินาที
     const rough = await nominatimSearch(tokens.slice(-3).join(" "));
@@ -199,9 +276,13 @@ async function runDelivery(getPoint, source, query) {
       Object.assign(deliveryState, {
         status: "error",
         source: "",
-        message: "หาตำแหน่งจากที่อยู่นี้ไม่เจอ ลองเพิ่มตำบล อำเภอ จังหวัด หรือกด “ใช้ตำแหน่งปัจจุบัน” แทน",
+        message: "หาตำแหน่งจากที่อยู่หรือลิงก์นี้ไม่เจอ ลิงก์แบบย่ออาจไม่มีพิกัด กรุณาวางชื่อสถานที่ ที่อยู่เต็ม หรือพิกัดจากแผนที่แทน",
       });
     } else {
+      if (source === "gps") {
+        document.getElementById("custAddress").value =
+          `พิกัดตำแหน่งปัจจุบัน: ${point.lat.toFixed(6)}, ${point.lng.toFixed(6)}`;
+      }
       const { km, estimated } = await fetchDrivingKm(point.lat, point.lng);
       if (runId !== deliveryRunId) return;
       const kmRounded = Math.round(km * 10) / 10;
