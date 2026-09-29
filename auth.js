@@ -21,12 +21,23 @@ firebase.initializeApp(firebaseConfig);
 const mfAuth = firebase.auth();
 
 /* ---------- Google ---------- */
-function loginWithGoogle() {
+function isMobileBrowser() {
+  return /Android|iPhone|iPad|iPod/i.test(navigator.userAgent) ||
+    (navigator.platform === "MacIntel" && navigator.maxTouchPoints > 1);
+}
+
+async function loginWithGoogle() {
   const provider = new firebase.auth.GoogleAuthProvider();
-  mfAuth.signInWithPopup(provider).catch((err) => {
+  try {
+    if (isMobileBrowser()) {
+      await mfAuth.signInWithRedirect(provider);
+      return;
+    }
+    await mfAuth.signInWithPopup(provider);
+  } catch (err) {
     console.error(err);
-    showToast("เข้าสู่ระบบด้วย Google ไม่สำเร็จ");
-  });
+    if (typeof showToast === "function") showToast("เข้าสู่ระบบด้วย Google ไม่สำเร็จ");
+  }
 }
 
 /* ---------- ออกจากระบบ ---------- */
@@ -54,6 +65,10 @@ function updateAuthUI(user) {
 }
 
 mfAuth.onAuthStateChanged(updateAuthUI);
+mfAuth.getRedirectResult().catch((err) => {
+  console.error("Google redirect login error:", err);
+  if (typeof showToast === "function") showToast("เข้าสู่ระบบด้วย Google ไม่สำเร็จ");
+});
 
 document.getElementById("authLoginBtn").addEventListener("click", () => {
   document.getElementById("loginDrawer").classList.add("open");
