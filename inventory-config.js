@@ -3,7 +3,7 @@
    แก้ไขค่าตรงนี้ให้เป็นของร้านคุณก่อนใช้งานจริง
    ============================================================ */
 const CONFIG = {
-  // LINE Official Account ID ของร้าน (เช่น "@mineflowerz")
+  // LINE Official Account ID ของร้าน (เช่น "@mineflower")
   // หาได้จาก LINE Official Account Manager > การตั้งค่า > Basic ID
   LINE_OA_ID: "@998hgsvg",
 
@@ -63,8 +63,8 @@ const CONFIG = {
    ลำดับในลิสต์นี้ = ลำดับที่แสดงในเมนูเลือกสถานะของ admin
    ============================================================ */
 const ORDER_STATUSES = [
-  { key: "pending",    label: "ยังไม่ได้สั่ง",       icon: "🕐" },
-  { key: "ordered",    label: "สั่งไปแล้ว",          icon: "✅" },
+  { key: "pending",    label: "รอยืนยันออเดอร์",       icon: "🕐" },
+  { key: "ordered",    label: "กำลังเตรียมออเดอร์",          icon: "✅" },
   { key: "delivering", label: "กำลังไปส่งออเดอร์",   icon: "🚚" },
   { key: "delivered",  label: "ออเดอร์ส่งเสร็จแล้ว", icon: "🎉" },
   { key: "cancelled",  label: "ยกเลิกออเดอร์",       icon: "❌" },

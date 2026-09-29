@@ -625,6 +625,7 @@ button{ font-family:inherit; cursor:pointer; border:none; background:none; }
 @media (max-width:640px){
   .nav__inner{ padding-top:12px; padding-bottom:12px; }
   .nav__logo{ left:calc(50% - 6px); font-size:1.4rem; }
+  .order-history--home{ display:none; }
   .nav__user-name{ display:none; }            /* ซ่อนชื่อผู้ใช้บนจอเล็ก ให้โลโก้อยู่กลางไม่ชนกัน */
   /* ปุ่มเข้าสู่ระบบ/ออกจากระบบ เป็นไอคอนกลมบนมือถือ เพื่อไม่ให้ชนกับโลโก้ที่อยู่กลาง */
   .nav__btn-text{ display:none; }

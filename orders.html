@@ -1,0 +1,76 @@
+<!DOCTYPE html>
+<html lang="th">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+<title>ประวัติออเดอร์ | Mine Flowers</title>
+<meta name="theme-color" content="#C15C77">
+<link rel="manifest" href="manifest.json">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Mitr:wght@300;400;500;600&family=Prompt:wght@300;400;500;600&family=Dancing+Script:wght@600;700&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="style.css">
+</head>
+<body>
+<header class="nav">
+  <div class="nav__inner">
+    <a href="index.html" class="nav__logo">Mine <span>Flowers</span></a>
+    <nav class="nav__links">
+      <a href="index.html#catalog">ช่อดอกไม้</a>
+      <a href="orders.html" aria-current="page">ประวัติออเดอร์</a>
+      <a href="index.html#contact">ติดต่อร้าน</a>
+    </nav>
+    <button class="nav__login" id="authLoginBtn" aria-label="เข้าสู่ระบบ" title="เข้าสู่ระบบ">
+      <span class="nav__btn-text">เข้าสู่ระบบ</span>
+      <svg class="nav__btn-icon" width="20" height="20" viewBox="0 0 24 24" fill="none" aria-hidden="true"><circle cx="12" cy="8" r="4" stroke="currentColor" stroke-width="1.7"/><path d="M4 20c0-3.6 3.6-6 8-6s8 2.4 8 6" stroke="currentColor" stroke-width="1.7" stroke-linecap="round"/></svg>
+    </button>
+    <div class="nav__user-chip" id="authUserChip" style="display:none;">
+      <span class="nav__user-name" id="authUserName"></span>
+      <button class="nav__logout" id="authLogoutBtn" aria-label="ออกจากระบบ" title="ออกจากระบบ">
+        <span class="nav__btn-text">ออกจากระบบ</span>
+        <svg class="nav__btn-icon" width="20" height="20" viewBox="0 0 24 24" fill="none" aria-hidden="true"><path d="M9 4H5a1 1 0 0 0-1 1v14a1 1 0 0 0 1 1h4" stroke="currentColor" stroke-width="1.7" stroke-linecap="round"/><path d="M16 8l4 4-4 4M20 12H9" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"/></svg>
+      </button>
+    </div>
+  </div>
+</header>
+
+<div class="drawer" id="loginDrawer">
+  <div class="drawer__backdrop" id="loginDrawerBackdrop"></div>
+  <div class="drawer__panel">
+    <div class="drawer__head">
+      <h3>เข้าสู่ระบบ / สมัครสมาชิก</h3>
+      <button id="loginDrawerClose" aria-label="ปิด">✕</button>
+    </div>
+    <div class="drawer__form">
+      <div class="form-section">
+        <p class="drawer__form-title">เลือกช่องทางเข้าสู่ระบบ</p>
+        <button type="button" class="btn btn--primary btn--full" id="loginGoogleBtn">เข้าสู่ระบบด้วย Google</button>
+        <p class="drawer__hint">เข้าสู่ระบบบัญชีเดิมเพื่อดูออเดอร์จากอุปกรณ์อื่น</p>
+      </div>
+    </div>
+  </div>
+</div>
+
+<main>
+  <section class="order-history" id="orderHistory">
+    <div class="section__head">
+      <p class="section__eyebrow">ประวัติการสั่งซื้อ</p>
+      <div class="section__title-row">
+        <h1>รายการออเดอร์ของคุณ</h1>
+        <div class="order-history__actions">
+          <a class="btn btn--ghost btn--sm" href="index.html">กลับหน้าร้าน</a>
+          <button type="button" class="order-history__clear" id="clearOrderHistory">ล้างประวัติ</button>
+        </div>
+      </div>
+    </div>
+    <div class="order-history__list" id="orderHistoryList" aria-live="polite"></div>
+  </section>
+</main>
+
+<script src="https://www.gstatic.com/firebasejs/12.18.0/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/12.18.0/firebase-auth-compat.js"></script>
+<script src="inventory-config.js"></script>
+<script src="auth.js"></script>
+<script src="order-history.js"></script>
+</body>
+</html>
